@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FraudLens — Adaptive Risk Engine</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #111827;
+      --border: #1f2937;
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --accent: #3b82f6;
+      --green: #10b981;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+    }
+    body {
+      margin: 0;
+      padding: 24px;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+    .header h1 { margin: 0; font-size: 1.5rem; display: flex; align-items: center; gap: 8px; }
+    .badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 9999px; background: #1e3a8a; color: #93c5fd; }
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .metric-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .metric-card span { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; }
+    .metric-card h2 { margin: 8px 0 0 0; font-size: 1.6rem; }
+    .scenario-container {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    .scenario-btns { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+    button {
+      background: #1f2937;
+      color: white;
+      border: 1px solid #374151;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.15s;
+    }
+    button:hover { background: #374151; }
+    .btn-green { border-color: rgba(16, 185, 129, 0.4); }
+    .btn-yellow { border-color: rgba(245, 158, 11, 0.4); }
+    .btn-red { border-color: rgba(239, 68, 68, 0.4); }
+    .btn-blue { background: #2563eb; border: none; }
+    .btn-blue:hover { background: #1d4ed8; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td { padding: 12px 16px; text-align: left; font-size: 0.85rem; border-bottom: 1px solid var(--border); }
+    th { background: #182234; color: var(--text-muted); font-weight: 500; }
+    .status-pill {
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .status-APPROVED { background: rgba(16, 185, 129, 0.15); color: var(--green); border: 1px solid var(--green); }
+    .status-GATED { background: rgba(245, 158, 11, 0.15); color: var(--yellow); border: 1px solid var(--yellow); }
+    .status-REJECTED { background: rgba(239, 68, 68, 0.15); color: var(--red); border: 1px solid var(--red); }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div>
+      <h1>FraudLens <span class="badge">Razorpay AI Internship Prototype</span></h1>
+      <p style="margin: 4px 0 0 0; color: var(--text-muted); font-size: 0.85rem;">
+        Adaptive 3-State Risk Manager: ML Inference &bull; 800ms SLA Budget &bull; Contextual Revenue Rescue
+      </p>
+    </div>
+    <div>
+      <a href="/docs" target="_blank" style="color: var(--accent); text-decoration: none; font-size: 0.9rem;">Interactive OpenAPI Docs &rarr;</a>
+    </div>
+  </div>
+
+  <div class="metrics-grid">
+    <div class="metric-card"><span>Total Analyzed</span><h2 id="m-total">0</h2></div>
+    <div class="metric-card"><span>Approved</span><h2 id="m-approved" style="color: var(--green);">0</h2></div>
+    <div class="metric-card"><span>Gated (Pending)</span><h2 id="m-gated" style="color: var(--yellow);">0</h2></div>
+    <div class="metric-card"><span>Rejected</span><h2 id="m-rejected" style="color: var(--red);">0</h2></div>
+    <div class="metric-card"><span>Avg Latency</span><h2 id="m-latency">0 ms</h2></div>
+    <div class="metric-card"><span>SLA Fallbacks</span><h2 id="m-fallbacks">0</h2></div>
+    <div class="metric-card"><span>Rescued Volume</span><h2 id="m-rescued" style="color: var(--green);">₹0</h2></div>
+  </div>
+
+  <div class="scenario-container">
+    <strong style="font-size: 0.95rem;">⚡ 1-Click Demo Scenarios</strong>
+    <div class="scenario-btns">
+      <button class="btn-green" onclick="runScenario(1)">Scenario 1: Standard Checkout (₹450 &bull; Safe)</button>
+      <button class="btn-yellow" onclick="runScenario(2)">Scenario 2: Anomaly Gated (₹55,000 &bull; High Value)</button>
+      <button class="btn-red" onclick="runScenario(3)">Scenario 3: Malicious Threat (Simulated Blocklist IP)</button>
+      <button class="btn-blue" onclick="runScenario(4)">Scenario 4: 800ms SLA Circuit Breaker (Timeout Fallback)</button>
+    </div>
+  </div>
+
+  <table id="tx-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Timestamp</th>
+        <th>Amount</th>
+        <th>Score</th>
+        <th>Decision</th>
+        <th>Telemetry (ML / SLA)</th>
+        <th>Explainable AI Explanation</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="table-body">
+      <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Awaiting transactions...</td></tr>
+    </tbody>
+  </table>
+
+  <script>
+    async function fetchTelemetry() {
+      try {
+        const [telRes, trailRes] = await Promise.all([
+          fetch('/api/telemetry'),
+          fetch('/api/audit-trail?limit=25')
+        ]);
+        const tel = await telRes.json();
+        const records = await trailRes.json();
+
+        document.getElementById('m-total').innerText = tel.total_analyzed;
+        document.getElementById('m-approved').innerText = tel.approved;
+        document.getElementById('m-gated').innerText = tel.gated_pending;
+        document.getElementById('m-rejected').innerText = tel.rejected;
+        document.getElementById('m-latency').innerText = `${tel.avg_latency_ms} ms`;
+        document.getElementById('m-fallbacks').innerText = tel.fallback_count;
+        document.getElementById('m-rescued').innerText = `₹${tel.rescued_volume.toLocaleString()}`;
+
+        const tbody = document.getElementById('table-body');
+        if (records.length === 0) return;
+        tbody.innerHTML = records.map(r => `
+          <tr>
+            <td>#${r.transaction_id}</td>
+            <td style="color: var(--text-muted);">${new Date(r.timestamp).toLocaleTimeString()}</td>
+            <td>₹${r.amount.toLocaleString()}</td>
+            <td><strong>${r.risk_score}</strong></td>
+            <td><span class="status-pill status-${r.action_taken}">${r.action_taken}</span></td>
+            <td>
+              <small>${r.fallback_triggered ? '⚠️ Fallback' : '🤖 RF ML'} (${r.ml_latency_ms}ms)</small>
+            </td>
+            <td style="max-width: 320px; font-size: 0.8rem; color: #d1d5db;">${r.explanation}</td>
+            <td>
+              ${r.action_taken === 'GATED' 
+                ? `<button onclick="unlockGated(${r.transaction_id})" style="background: #065f46; border: 1px solid #10b981; font-size: 0.75rem;">Unlock</button>` 
+                : '<span style="color: var(--text-muted);">&mdash;</span>'}
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) { console.error("Telemetry sync error:", e); }
+    }
+
+    async function runScenario(type) {
+      let payload = { user_id: "usr_buyer_1", amount: 450, ip_address: "203.0.113.10", tx_count_last_1h: 1, user_avg_amount_30d: 500 };
+      let timeoutQuery = "";
+
+      if (type === 2) {
+        // Suspicious IP + Device Novelty + Slight Velocity Spike pushes this perfectly into GATED
+        payload = { 
+          user_id: "usr_buyer_2", 
+          amount: 55000, 
+          ip_address: "198.51.100.25", 
+          tx_count_last_1h: 4, 
+          user_avg_amount_30d: 1500,
+          device_id: "dev_new_session_88" 
+        };
+      } else if (type === 3) {
+        // Malicious IP triggers the deterministic hard block
+        payload = { user_id: "usr_bad_actor", amount: 85000, ip_address: "203.0.113.66", tx_count_last_1h: 8, user_avg_amount_30d: 1000 };
+      } else if (type === 4) {
+        payload = { user_id: "usr_latency_test", amount: 2400, ip_address: "203.0.113.10", tx_count_last_1h: 1, user_avg_amount_30d: 2000 };
+        timeoutQuery = "?simulate_timeout=true";
+      }
+
+      await fetch(`/api/checkout${timeoutQuery}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      fetchTelemetry();
+    }
+
+    async function unlockGated(txId) {
+      const code = prompt(`Enter challenge verification for Tx #${txId} (Use 'smith' or OTP '4829'):`, "smith");
+      if (!code) return;
+
+      const res = await fetch('/api/verify-gated', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transaction_id: txId, verification_answer: code })
+      });
+      const data = await res.json();
+      alert(data.explanation);
+      fetchTelemetry();
+    }
+
+    setInterval(fetchTelemetry, 2500);
+    fetchTelemetry();
+  </script>
+</body>
+</html>
